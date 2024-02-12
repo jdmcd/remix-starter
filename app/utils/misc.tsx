@@ -1,4 +1,5 @@
 import { useFormAction, useNavigation } from "@remix-run/react";
+import clsx, { ClassValue } from "clsx";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 export function getUserImgSrc(imageId?: string | null) {
@@ -225,4 +226,8 @@ export async function downloadFile(url: string, retries = 0) {
     if (retries > MAX_RETRIES) throw e;
     return downloadFile(url, retries + 1);
   }
+}
+
+export function cn(...inputs: ClassValue[]) {
+  return clsx(inputs);
 }
