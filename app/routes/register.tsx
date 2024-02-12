@@ -10,9 +10,9 @@ import { Form, Link, useActionData, useSearchParams } from "@remix-run/react";
 import { z } from "zod";
 
 import { createUserSession, getUserId } from "~/auth/session.server";
-import { ErrorList, Field } from "~/components/ui/forms";
-import { LoginFormSchema } from "~/forms/LoginFormSchema";
-import { verifyLogin } from "~/models/user.server";
+import { Field, ErrorList } from "~/components/ui/forms";
+import { RegisterFormSchema } from "~/forms/RegisterFormSchema";
+import { createUser, getUserByEmail } from "~/models/user.server";
 import { safeRedirect } from "~/utils/utils";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
@@ -24,53 +24,53 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 export const action = async ({ request }: ActionFunctionArgs) => {
   const formData = await request.formData();
   const submission = await parseWithZod(formData, {
-    schema: (intent) =>
-      LoginFormSchema.transform(async (data, ctx) => {
-        if (intent !== null) return { ...data, session: null };
-
-        const session = await verifyLogin(data.email, data.password);
-        if (!session) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "Invalid username or password",
-          });
-          return z.NEVER;
-        }
-
-        return { ...data, session };
-      }),
+    schema: RegisterFormSchema.superRefine(async (data, ctx) => {
+      const existingUser = await getUserByEmail(data.email);
+      if (existingUser) {
+        ctx.addIssue({
+          path: ["email"],
+          code: z.ZodIssueCode.custom,
+          message: "A user already exists with this email",
+        });
+        return;
+      }
+    }),
     async: true,
   });
 
-  if (submission.status !== "success" || !submission.value.session) {
+  if (submission.status !== "success") {
     return json(
       { result: submission.reply({ hideFields: ["password"] }) },
       { status: submission.status === "error" ? 400 : 200 },
     );
   }
 
+  const { email, password, firstName, lastName } = submission.value;
+  const redirectTo = safeRedirect(submission.value.redirectTo, "/");
+  const user = await createUser({ email, password, firstName, lastName });
+
   return createUserSession({
-    redirectTo: safeRedirect(submission.value.redirectTo, "/"),
-    remember: true,
+    redirectTo,
+    remember: false,
     request,
-    userId: submission.value.session?.id ?? -1,
+    userId: user.id,
   });
 };
 
-export const meta: MetaFunction = () => [{ title: "Login" }];
+export const meta: MetaFunction = () => [{ title: "Sign Up" }];
 
-export default function LoginPage() {
+export default function Register() {
   const [searchParams] = useSearchParams();
-  const redirectTo = searchParams.get("redirectTo") || "/dashboard";
+  const redirectTo = searchParams.get("redirectTo") ?? undefined;
   const actionData = useActionData<typeof action>();
 
   const [form, fields] = useForm({
-    id: "login-form",
-    constraint: getZodConstraint(LoginFormSchema),
+    id: "register-form",
+    constraint: getZodConstraint(RegisterFormSchema),
     defaultValue: { redirectTo },
     lastResult: actionData?.result,
     onValidate({ formData }) {
-      return parseWithZod(formData, { schema: LoginFormSchema });
+      return parseWithZod(formData, { schema: RegisterFormSchema });
     },
     shouldRevalidate: "onBlur",
   });
@@ -79,6 +79,18 @@ export default function LoginPage() {
     <div className="flex min-h-full flex-col justify-center">
       <div className="mx-auto w-full max-w-md px-8">
         <Form method="POST" {...getFormProps(form)} className="space-y-6">
+          <Field
+            labelProps={{ children: "First Name" }}
+            inputProps={getInputProps(fields.firstName, { type: "text" })}
+            errors={fields.firstName.errors}
+          />
+
+          <Field
+            labelProps={{ children: "Last Name" }}
+            inputProps={getInputProps(fields.lastName, { type: "text" })}
+            errors={fields.lastName.errors}
+          />
+
           <Field
             labelProps={{ children: "Email" }}
             inputProps={getInputProps(fields.email, { type: "email" })}
@@ -96,20 +108,19 @@ export default function LoginPage() {
             type="submit"
             className="w-full rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 focus:bg-blue-400"
           >
-            Log in
+            Create Account
           </button>
           <ErrorList errors={form.errors} id={form.errorId} />
-          {/* <div className="flex items-center justify-between"> */}
           <div className="text-center text-sm text-gray-500">
-            Don&apos;t have an account?{" "}
+            Already have an account?{" "}
             <Link
               className="text-blue-500 underline"
               to={{
-                pathname: "/register",
+                pathname: "/login",
                 search: searchParams.toString(),
               }}
             >
-              Sign up
+              Log In
             </Link>
           </div>
         </Form>

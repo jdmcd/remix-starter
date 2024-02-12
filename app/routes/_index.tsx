@@ -18,7 +18,7 @@ export default function Index() {
       <div className="mx-auto mt-10 max-w-sm sm:flex sm:max-w-none sm:justify-center">
         <div className="space-y-4 sm:mx-auto sm:inline-grid sm:grid-cols-2 sm:gap-5 sm:space-y-0">
           <Link
-            to="/join"
+            to="/register"
             className="flex items-center justify-center rounded-md border border-transparent bg-blue-50 px-4 py-3 text-base font-medium text-blue-700 shadow-sm hover:bg-blue-100 sm:px-8"
           >
             Sign up
