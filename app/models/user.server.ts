@@ -1,7 +1,7 @@
 import type { Password, User } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
-import { prisma } from "~/db.server";
+import { prisma } from "~/utils/db.server";
 
 export type { User } from "@prisma/client";
 
@@ -35,7 +35,7 @@ export async function deleteUserByEmail(email: User["email"]) {
 export async function verifyLogin(
   email: User["email"],
   password: Password["hash"],
-) {
+): Promise<User | null> {
   const userWithPassword = await prisma.user.findUnique({
     where: { email },
     include: {

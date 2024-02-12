@@ -49,7 +49,9 @@ function isUser(user: unknown): user is User {
     user != null &&
     typeof user === "object" &&
     "email" in user &&
-    typeof user.email === "string"
+    typeof user.email === "string" &&
+    "id" in user &&
+    typeof user.id === "number"
   );
 }
 
