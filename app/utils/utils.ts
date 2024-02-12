@@ -3,6 +3,8 @@ import { useMemo } from "react";
 
 import type { User } from "~/models/user.server";
 
+import { redirectWithToast } from "./toast.server";
+
 const DEFAULT_REDIRECT = "/";
 
 /**
@@ -66,9 +68,7 @@ export function useOptionalUser(): User | undefined {
 export function useUser(): User {
   const maybeUser = useOptionalUser();
   if (!maybeUser) {
-    throw new Error(
-      "No user found in root loader, but user is required by useUser. If user is optional, try useOptionalUser instead.",
-    );
+    throw redirectWithToast("/login", { description: "Please log in" });
   }
   return maybeUser;
 }

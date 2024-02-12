@@ -18,12 +18,14 @@ import {
 import { getUser } from "~/auth/session.server";
 import stylesheet from "~/tailwind.css";
 
+import Header from "./components/nav/header";
 import { useToast } from "./components/toaster";
 import { Toaster } from "./components/ui/sonner";
 import { getEnv } from "./utils/env.server";
 import { combineHeaders, getDomainUrl } from "./utils/misc";
 import { Theme, getTheme } from "./utils/theme.server";
 import { getToast } from "./utils/toast.server";
+import { useOptionalUser } from "./utils/utils";
 
 export const links: LinksFunction = () => [
   { rel: "stylesheet", href: stylesheet },
@@ -93,6 +95,7 @@ function Document({
 
 export default function App() {
   const data = useLoaderData<typeof loader>();
+  const user = useOptionalUser();
   useToast(data.toast);
 
   return (
@@ -100,7 +103,8 @@ export default function App() {
       theme={data.requestInfo.userPrefs.theme ?? "light"}
       env={data.ENV}
     >
-      <div className="flex h-screen flex-col justify-between">
+      <div className="flex h-screen flex-col">
+        {user ? <Header user={user} /> : null}
         <div className="flex-1">
           <Outlet />
         </div>

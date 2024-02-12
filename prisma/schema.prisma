@@ -15,7 +15,6 @@ model User {
   updatedAt DateTime @updatedAt
 
   password Password?
-  notes    Note[]
 
   @@map(name: "users")
 }
@@ -29,19 +28,4 @@ model Password {
 
   @@index([userId])
   @@map(name: "passwords")
-}
-
-model Note {
-  id    Int    @id @default(autoincrement())
-  title String
-  body  String
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  userId Int
-
-  @@index([userId])
-  @@map(name: "notes")
 }
