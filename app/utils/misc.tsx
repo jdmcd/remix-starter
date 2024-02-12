@@ -1,6 +1,7 @@
 import { useFormAction, useNavigation } from "@remix-run/react";
 import clsx, { ClassValue } from "clsx";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { twMerge } from "tailwind-merge";
 
 export function getUserImgSrc(imageId?: string | null) {
   return imageId ? `/resources/user-images/${imageId}` : "/img/user.png";
@@ -229,5 +230,5 @@ export async function downloadFile(url: string, retries = 0) {
 }
 
 export function cn(...inputs: ClassValue[]) {
-  return clsx(inputs);
+  return twMerge(clsx(inputs));
 }
