@@ -3,6 +3,7 @@ import invariant from "tiny-invariant";
 
 import type { User } from "~/models/user.server";
 import { getUserById } from "~/models/user.server";
+import { redirectWithToast } from "~/utils/toast.server";
 
 invariant(process.env.SESSION_SECRET, "SESSION_SECRET must be set");
 
@@ -76,15 +77,19 @@ export async function createUserSession({
 }) {
   const session = await getSession(request);
   session.set(USER_SESSION_KEY, userId);
-  return redirect(redirectTo, {
-    headers: {
-      "Set-Cookie": await sessionStorage.commitSession(session, {
-        maxAge: remember
-          ? 60 * 60 * 24 * 7 // 7 days
-          : undefined,
-      }),
+  return redirectWithToast(
+    redirectTo,
+    { description: "Logged in", type: "success" },
+    {
+      headers: {
+        "Set-Cookie": await sessionStorage.commitSession(session, {
+          maxAge: remember
+            ? 60 * 60 * 24 * 7 // 7 days
+            : undefined,
+        }),
+      },
     },
-  });
+  );
 }
 
 export async function logout(request: Request) {
